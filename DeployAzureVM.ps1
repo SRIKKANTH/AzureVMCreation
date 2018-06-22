@@ -1,3 +1,4 @@
+#Declaring the parameter that to give at run time 
 param(
  [string]
 $subscriptionId,
@@ -15,7 +16,7 @@ $location,
 $deploymentName
 )
 
-# sign in
+# Sigining in to the portal
 Write-Host "Logging in...";
 Login-AzureRmAccount
 
@@ -26,20 +27,38 @@ $subscriptions=Get-AzureRmSubscription -SubscriptionId $subscriptionId
 Write-Host "Select the subscriptions from";
 Set-AzureRmContext -Subscription 23949b93-8072-4516-bbc2-955255d022fd
 
-#Create or exists resourceGroup
-$resourcegroup = Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location -erroraction silentlycontinue
-if(!$resourcegroup)
- {
-    New-AzureRmResourceGroup -Name $resourceGroupName -Location $location
- }
+#Create or use existing resourceGroup
+$resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
+if(!$resourceGroup) 
+{ 
+    if(!$rglocation) 
+    { 
+        $rglocation = Read-Host "resourceGroupLocation"; 
+    } 
+    Write-Host "Creating resource group '$resourceGroupName' in location '$location'"; 
+    $resourcerg=New-AzureRmResourceGroup -Name $resourceGroupName -Location $location
+    $resourcerg
+     if($resourcerg.ProvisioningState -eq "Succeeded")
+      {
+       Write-Host "Resourcegroup created successfully"
+      }
+     else
+     {
+      Write-Host "Resourcegroup is not created"
+     }
+    if($resourcerg.ProvisioningState -ne "Succeeded")
+     {
+      Write-Host "Resourcegroup not yet created"
+     }
+}  
 else
- {
-    Write-Host "resourcegroup is exisited"
- }
+{ 
+   Write-Host "Using existing resource group '$resourceGroupName"; 
+} 
 
-#Deploy VM
+#Deploying VM and checking whether it is succeeded or not
 $name="MyUbuntuVM"
-$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile azuredeploy.json  -TemplateParameterFile azuredeploy.parameters.json
+$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile C:\Users\LENORA\Desktop\Powershell\azuredeploy.json  -TemplateParameterFile C:\Users\LENORA\Desktop\Powershell\AzureDeployParameters.json
 if ($vm.ProvisioningState -eq "Succeeded")
 {
     $MaxTimeOut=300
@@ -54,7 +73,7 @@ if ($vm.ProvisioningState -eq "Succeeded")
    }
    else
    {
-    Write-Host -NoNewline "." #print a . without newline
+    Write-Host -NoNewline "." 
    }
   $i=$i+1
 }
