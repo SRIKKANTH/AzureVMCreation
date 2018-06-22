@@ -1,0 +1,1 @@
+Keep all the template files here.
