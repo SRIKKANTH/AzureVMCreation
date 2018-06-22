@@ -40,7 +40,7 @@ else
 
 #Deploy VM
 $name="MyUbuntuVM"
-$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "E:\AzureVmDeploy\azuredeploy.json"  -TemplateParameterFile "E:\AzureVmDeploy\azuredeploy.parameters.json"
+$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "azuredeploy.json"  -TemplateParameterFile "azuredeploy.parameters.json"
 if ($vm.ProvisioningState -eq "Succeeded")
  {
     $MaxTimeOut=300
