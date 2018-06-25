@@ -1,84 +1,76 @@
-#Declaring the parameter that to give at run time 
+﻿# Declaring the parameter that to give at run time 
 param(
- [string]
-$subscriptionId,
+	[string]
+	$subscriptionId,
 
- [Parameter(Mandatory=$True)]
-[string]
-$resourceGroupName,
+	[Parameter(Mandatory=$True)]
+	[string]
+	$resourceGroupName,
 
-[Parameter(Mandatory=$True)]
-[string]
-$location,
+	[Parameter(Mandatory=$True)]
+	[string]
+	$location
 
-[Parameter(Mandatory=$True)]
-[string]
-$deploymentName
 )
-
 # Sigining in to the portal
 Write-Host "Logging in...";
-Login-AzureRmAccount
+#Login-AzureRmAccount
 
 # Getting the subsciptions from the portal
 $subscriptions=Get-AzureRmSubscription -SubscriptionId $subscriptionId
 
-#select subscription
+# select subscription
 Write-Host "Select the subscriptions from";
 Set-AzureRmContext -Subscription 23949b93-8072-4516-bbc2-955255d022fd
 
-#Create or use existing resourceGroup
-$resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
-if(!$resourceGroup) 
-{ 
-    if(!$rglocation) 
-    { 
-        $rglocation = Read-Host "resourceGroupLocation"; 
-    } 
-    Write-Host "Creating resource group '$resourceGroupName' in location '$location'"; 
-    $resourcerg=New-AzureRmResourceGroup -Name $resourceGroupName -Location $location
-    $resourcerg
-     if($resourcerg.ProvisioningState -eq "Succeeded")
-      {
-       Write-Host "Resourcegroup created successfully"
-      }
-     else
-     {
-      Write-Host "Resourcegroup is not created"
-     }
-    if($resourcerg.ProvisioningState -ne "Succeeded")
-     {
-      Write-Host "Resourcegroup not yet created"
-     }
-}  
+# Create or using existing resourceGroup 
+Write-Host "Verifying ResourceGroupName exit or not: '$resourceGroupName'"
+$resourcegroup = Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location -erroraction silentlycontinue
+if(!$resourcegroup)
+{
+	Write-Host "Creating ResourceGroup: '$resourceGroupName'"
+	New-AzureRmResourceGroup -Name $resourceGroupName -Location $location 
+}
 else
-{ 
-   Write-Host "Using existing resource group '$resourceGroupName"; 
-} 
+{
+	Write-Host "resourcegroup is exisited"
+}
 
-#Deploying VM and checking whether it is succeeded or not
+# Deploying VM and checking whether it is succeeded or not
 $name="MyUbuntuVM"
-$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile C:\Users\LENORA\Desktop\Powershell\azuredeploy.json  -TemplateParameterFile C:\Users\LENORA\Desktop\Powershell\AzureDeployParameters.json
+Write-Host "Creating and Deploying the VM"
+$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json" -TemplateParameterFile "Templates\azuredeploy.parameters.json"
 if ($vm.ProvisioningState -eq "Succeeded")
 {
     $MaxTimeOut=300
     $i=0
-  while($MaxTimeOut -gt $i)
- {
-     $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
-   if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
-   {
-     Write-Host "Deployment completed succesfully"
-     break
-   }
-   else
-   {
-    Write-Host -NoNewline "." 
-   }
-  $i=$i+1
+    while($MaxTimeOut -gt $i)
+    {
+        $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
+        if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
+        {
+            Write-Host "Deployment completed succesfully"
+            break
+        }
+        else
+        {
+            Write-Host -NoNewline "." #print a . without newline
+        }
+        $i=$i+1
+    }
+    if ($MaxTimeOut -eq $i)
+    {
+        Write-Host "Deployment failed"
+    } 
 }
-if ($MaxTimeOut -eq $i)
+
+#To get the PublicIp Address of the VM that created
+Write-Host "Getting the IpAddress of the VM"
+if ($vm.ProvisioningState -eq "Succeeded")
 {
-   Write-Host "Deployment failed"
+    Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select ResourceGroupName, Name, IpAddress
 }
+else
+{
+    Write-Host "IpAddress not found"
 }
