@@ -3,10 +3,10 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "adminUsername": {
-      "value": "ghuser"
+      "value": "bhavani"
     },
     "adminPassword": {
-      "value": "Linux,.0n,.Azure"
+      "value": "Azure@123456"
     },
     "dnsLabelPrefix": {
       "value": "azure"
