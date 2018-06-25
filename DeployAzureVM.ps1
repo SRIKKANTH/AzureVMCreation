@@ -21,7 +21,7 @@ $subscriptions=Get-AzureRmSubscription -SubscriptionId $subscriptionId
 
 #select subscription
 Write-Host "Select the subscriptions from";
-Set-AzureRmContext -Subscription 23949b93-8072-4516-bbc2-955255d022fd
+Set-AzureRmContext -Subscription $SubID
 
 #Create or exists resourceGroup 
 Write-Host "Verifying ResourceGroup: '$resourceGroupName'"
