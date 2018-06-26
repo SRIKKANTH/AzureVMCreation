@@ -41,6 +41,7 @@ $name="MyUbuntuVM"
 $vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json"  -TemplateParameterFile "Templates\azuredeploy.parameters.json"
 if ($vm.ProvisioningState -eq "Succeeded")
 {
+    $vm
 	$MaxTimeOut=300
 	$i=0
 	while($MaxTimeOut -gt $i)
