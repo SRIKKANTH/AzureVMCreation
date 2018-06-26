@@ -10,7 +10,7 @@ param(
 	[Parameter(Mandatory=$True)]
 	[string]
 	$location
-
+	
 )
 # sign in
 Write-Host "Logging in...";
