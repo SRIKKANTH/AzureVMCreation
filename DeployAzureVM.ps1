@@ -9,12 +9,7 @@ param(
 
 	[Parameter(Mandatory=$True)]
 	[string]
-	$location,
-	
-	[Parameter(Mandatory=$True)]
-	[string]
-	$SubId
-
+	$location
 )
 # Sigining in to the portal
 Write-Host "Logging in...";
@@ -24,7 +19,7 @@ Write-Host "Logging in...";
 $subscriptions=Get-AzureRmSubscription
 # select subscription
 Write-Host "Select the subscriptions from";
-Set-AzureRmContext -Subscription $SubId
+Set-AzureRmContext -Subscription $subscriptionId
 # Create or using existing resourceGroup 
 
 Write-Host "Verifying ResourceGroupName exit or not: '$resourceGroupName'"
