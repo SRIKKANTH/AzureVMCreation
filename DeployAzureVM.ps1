@@ -33,7 +33,7 @@ if(!$resourcegroup)
 }
 else
 {
-	Write-Host "resourcegroup is exisited"
+	Write-Host "Resourcegroup: '$resourceGroupName' already exists"
 }
 
 # Deploying VM and checking whether it is succeeded or not
