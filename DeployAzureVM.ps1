@@ -49,7 +49,7 @@ if ($vm.ProvisioningState -eq "Succeeded")
         $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
         if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
         {
-			$vm			#Displaying the ssh details of the VM
+			$vm			
             Write-Host "Deployment completed succesfully"
             break
         }
@@ -65,13 +65,25 @@ if ($vm.ProvisioningState -eq "Succeeded")
     } 
 }
 
-#To get the PublicIp Address of the VM that created
+#To get the Username, Password and PublicIp Address of the VM that created
 Write-Host "Getting the IpAddress of the VM"
 if ($vm.ProvisioningState -eq "Succeeded")
 {
-    Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select ResourceGroupName, Name, IpAddress
+    $var=Get-Content "Templates\azuredeploy.parameters.json"| ConvertFrom-Json 
+    $Username=$var.parameters.adminUsername.value
+    Write-Host " UserName of the VM is "$Username
+
+    $Password=$var.parameters.adminPassword.value 
+    $SPassword= ConvertTo-SecureString $Password -AsPlainText -Force
+    Write-Host " The password is " $SPassword
+
+    $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress
+    Write-Host "IPAddress is" $IPAddress.IpAddress
+
+    $sshdetails= 'ssh ' + $Username + '@' + $IPAddress.IpAddress
+    $sshdetails
 }
 else
 {
-    Write-Host "IpAddress not found"
+    Write-Host "VM does not exit"
 }
