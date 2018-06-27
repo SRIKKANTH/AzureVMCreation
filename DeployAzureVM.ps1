@@ -39,8 +39,8 @@ else
 # Deploying VM and checking whether it is succeeded or not
 $name="MyUbuntuVM"
 Write-Host "Creating and Deploying the VM"
-$vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json" -TemplateParameterFile "Templates\azuredeploy.parameters.json"
-if ($vm.ProvisioningState -eq "Succeeded")
+$RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json" -TemplateParameterFile "Templates\azuredeploy.parameters.json"
+if ($RGdeployment.ProvisioningState -eq "Succeeded")
 {
     $MaxTimeOut=300
     $i=0
@@ -49,7 +49,7 @@ if ($vm.ProvisioningState -eq "Succeeded")
         $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
         if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
         {
-			$vm			#Displaying the ssh details of the VM
+			$RGdeployment			#Displaying the ssh details of the VM
             Write-Host "Deployment completed succesfully"
             break
         }
@@ -67,7 +67,7 @@ if ($vm.ProvisioningState -eq "Succeeded")
 
 #To get the PublicIp Address of the VM that created
 Write-Host "Getting the IpAddress of the VM"
-if ($vm.ProvisioningState -eq "Succeeded")
+if ($RGdeployment.ProvisioningState -eq "Succeeded")
 {
     Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select ResourceGroupName, Name, IpAddress
 }
