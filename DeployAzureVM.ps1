@@ -65,7 +65,7 @@ if ($vm.ProvisioningState -eq "Succeeded")
 #Get Ipaddress,Username,Password,ssh details
 if($vm.ProvisioningState -eq "Succeeded")
 {
-	$var = Get-Content C:\Users\v-bhvenn\Desktop\Azurevmdeploy\azuredeploy.parameters.json | ConvertFrom-Json
+	$var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
 	$adminUsername = $var.parameters.adminUsername.value
 	Write-Host "Username of vm is:"$adminUsername
 
