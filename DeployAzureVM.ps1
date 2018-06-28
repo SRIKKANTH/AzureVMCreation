@@ -41,24 +41,45 @@ $name="MyUbuntuVM"
 $vm = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json"  -TemplateParameterFile "Templates\azuredeploy.parameters.json"
 if ($vm.ProvisioningState -eq "Succeeded")
 {
-$MaxTimeOut=300
-$i=0
-while($MaxTimeOut -gt $i)
+		$MaxTimeOut=300
+		$i=0
+		while($MaxTimeOut -gt $i)
+		{
+			$vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
+			if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
+			{
+				Write-Host "Deployment completed succesfully"
+				break
+			}
+			else
+			{
+				Write-Host -NoNewline "." #print a . without newline
+			}
+			$i=$i+1
+		}
+		if ($MaxTimeOut -eq $i)
+		{
+			Write-Host "Deployment failed"
+		} 
+}
+#Get Ipaddress,Username,Password,ssh details
+if($vm.ProvisioningState -eq "Succeeded")
 {
-$vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
-if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
-{
-Write-Host "Deployment completed succesfully"
-break
+	$var = Get-Content C:\Users\v-bhvenn\Desktop\Azurevmdeploy\azuredeploy.parameters.json | ConvertFrom-Json
+	$adminUsername = $var.parameters.adminUsername.value
+	Write-Host "Username of vm is:"$adminUsername
+
+	$adminPassword = $var.Parameters.adminPassword.value
+	$SPassword= ConvertTo-SecureString $adminPassword -AsPlainText -Force 
+	Write-Host "Password of vm is:"$SPassword
+
+	$IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
+    Write-Host "IPAddress is" $IPAddress.IpAddress 
+    $sshdetails= 'ssh ' + $adminUsername + '@' + $IPAddress.IpAddress 
+    $sshdetails
 }
 else
 {
-Write-Host -NoNewline "." #print a . without newline
+	Write-Host "Deployment failed"
 }
-$i=$i+1
-}
-if ($MaxTimeOut -eq $i)
-{
-Write-Host "Deployment failed"
-} 
-}
+
