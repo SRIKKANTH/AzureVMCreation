@@ -61,25 +61,22 @@ if ($vm.ProvisioningState -eq "Succeeded")
 		{
 			Write-Host "Deployment failed"
 		} 
+            GetIPAddress          
 }
 #Get Ipaddress,Username,Password,ssh details
-if($vm.ProvisioningState -eq "Succeeded")
+Function GetIPAddress
 {
-	$var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
-	$adminUsername = $var.parameters.adminUsername.value
-	Write-Host "Username of vm is:"$adminUsername
+Write-Host "getting the adminUsername and IPAddress"
+$var = Get-Content C:\Users\v-bhvenn\Desktop\Azurevmdeploy\azuredeploy.parameters.json | ConvertFrom-Json
+$adminUsername = $var.parameters.adminUsername.value
+Write-Host "Username of vm is:"$adminUsername
 
-	$adminPassword = $var.Parameters.adminPassword.value
-	$SPassword= ConvertTo-SecureString $adminPassword -AsPlainText -Force 
-	Write-Host "Password of vm is:"$SPassword
+$adminPassword = $var.Parameters.adminPassword.value
+$SPassword= ConvertTo-SecureString $adminPassword -AsPlainText -Force 
+Write-Host "Password of vm is:"$SPassword
 
-	$IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
+$IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
     Write-Host "IPAddress is" $IPAddress.IpAddress 
     $sshdetails= 'ssh ' + $adminUsername + '@' + $IPAddress.IpAddress 
     $sshdetails
 }
-else
-{
-	Write-Host "Deployment failed"
-}
-
