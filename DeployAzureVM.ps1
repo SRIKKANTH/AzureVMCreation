@@ -1,5 +1,4 @@
 
-
 # Declaring the parameter that to give at run time 
 param (
 	[string] $subscriptionId = "YourSubscription",
@@ -65,12 +64,20 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
 }
 
 #To get the PublicIp Address of the VM that created
-Write-Host "Getting the IpAddress of the VM"
-if ($RGdeployment.ProvisioningState -eq "Succeeded")
+Function GetIPAddress
 {
-    Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object ResourceGroupName, Name, IpAddress
+Write-Host "getting the adminUsername and IPAddress"
+$var = Get-Content C:\Users\v-bhvenn\Desktop\Azurevmdeploy\azuredeploy.parameters.json | ConvertFrom-Json
+$adminUsername = $var.parameters.adminUsername.value
+Write-Host "Username of vm is:"$adminUsername
+
+$adminPassword = $var.Parameters.adminPassword.value
+Write-Host "Password of vm is:"$adminPassword
+
+$IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
+    Write-Host "IPAddress is" $IPAddress.IpAddress 
+    $sshdetails= 'ssh ' + $adminUsername + '@' + $IPAddress.IpAddress 
+    $sshdetails
 }
-else
-{
-    Write-Host "IpAddress not found"
-}
+    
+    
