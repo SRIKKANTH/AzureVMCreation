@@ -1,26 +1,25 @@
+
+
 # Declaring the parameter that to give at run time 
-param(
-	[string]
-	$subscriptionId,
-
-	[Parameter(Mandatory=$True)]
-	[string]
-	$resourceGroupName,
-
-	[Parameter(Mandatory=$True)]
-	[string]
-	$location
-
+param (
+	[string] $subscriptionId = "YourSubscription",
+	[string] $resourceGroupName = "MyRG",
+	[string] $location = "eastus",
+	[switch] $Debug = $false
 )
+
+exit
+
+. .\libs\sshUtils.ps1
 # Sigining in to the portal
-Write-Host "Logging in...";
+Write-Host "Logging in..."
 Login-AzureRmAccount
 
 # Getting the subsciptions from the portal
-$subscriptions=Get-AzureRmSubscription -SubscriptionId $subscriptionId
+Get-AzureRmSubscription -SubscriptionId $subscriptionId
 
 #select subscription
-Write-Host "Select the subscriptions from";
+Write-Host "Select the subscriptions from"
 Set-AzureRmContext -Subscription $subscriptionId
 
 # Create or using existing resourceGroup 
@@ -69,7 +68,7 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
 Write-Host "Getting the IpAddress of the VM"
 if ($RGdeployment.ProvisioningState -eq "Succeeded")
 {
-    Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select ResourceGroupName, Name, IpAddress
+    Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object ResourceGroupName, Name, IpAddress
 }
 else
 {
