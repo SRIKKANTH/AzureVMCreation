@@ -6,9 +6,6 @@ param (
 	[string] $location = "eastus",
 	[switch] $Debug = $false
 )
-
-exit
-
 . .\libs\sshUtils.ps1
 # Sigining in to the portal
 Write-Host "Logging in..."
@@ -33,8 +30,10 @@ else
 {
 	Write-Host "Resourcegroup: '$resourceGroupName' already exists"
 }
+DeploySingleVM
 
 # Deploying VM and checking whether it is succeeded or not
+Function DeploySingleVM{
 $name="MyUbuntuVM"
 Write-Host "Creating and Deploying the VM"
 $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json" -TemplateParameterFile "Templates\azuredeploy.parameters.json"
@@ -61,13 +60,16 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
     {
         Write-Host "Deployment failed"
     } 
+    }
+    GetIPAddress
 }
+
 
 #To get the PublicIp Address of the VM that created
 Function GetIPAddress
 {
 Write-Host "getting the adminUsername and IPAddress"
-$var = Get-Content C:\Users\v-bhvenn\Desktop\Azurevmdeploy\azuredeploy.parameters.json | ConvertFrom-Json
+$var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
 $adminUsername = $var.parameters.adminUsername.value
 Write-Host "Username of vm is:"$adminUsername
 
