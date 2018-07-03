@@ -7,8 +7,6 @@ param (
 	[switch] $Debug = $false
 )
 
-exit
-
 . .\libs\sshUtils.ps1
 # Sigining in to the portal
 Write-Host "Logging in..."
