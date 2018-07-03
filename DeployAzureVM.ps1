@@ -4,6 +4,8 @@ param (
 	[string] $subscriptionId = "YourSubscription",
 	[string] $resourceGroupName = "MyRG",
 	[string] $location = "eastus",
+    [string] $Template = "Templates\azuredeploy.json",
+    [string] $TemplateFile = "Templates\azuredeploy.parameters.json",
 	[switch] $Debug = $false
 )
 . .\libs\sshUtils.ps1
@@ -36,7 +38,7 @@ DeploySingleVM
 Function DeploySingleVM{
 $name="MyUbuntuVM"
 Write-Host "Creating and Deploying the VM"
-$RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile "Templates\azuredeploy.json" -TemplateParameterFile "Templates\azuredeploy.parameters.json"
+$RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $TemplateFile
 if ($RGdeployment.ProvisioningState -eq "Succeeded")
 {
     $MaxTimeOut=300
