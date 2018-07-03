@@ -8,6 +8,7 @@ param (
     [string] $TemplateFile = "Templates\azuredeploy.parameters.json",
 	[switch] $Debug = $false
 )
+
 . .\libs\sshUtils.ps1
 # Sigining in to the portal
 Write-Host "Logging in..."
