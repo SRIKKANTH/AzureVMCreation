@@ -1,12 +1,12 @@
 
 # Declaring the parameter that to give at run time 
 param (
-	[string] $subscriptionId = "YourSubscription",
-	[string] $resourceGroupName = "MyRG",
-	[string] $location = "eastus",
+    [string] $subscriptionId = "YourSubscription",
+    [string] $resourceGroupName = "MyRG",
+    [string] $location = "eastus",
     [string] $Template = "Templates\azuredeploy.json",
     [string] $TemplateFile = "Templates\azuredeploy.parameters.json",
-	[switch] $Debug = $false
+    [switch] $Debug = $false
 )
 
 . .\libs\sshUtils.ps1
@@ -26,63 +26,61 @@ Write-Host "Verifying ResourceGroupName exit or not: '$resourceGroupName'"
 $resourcegroup = Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location -erroraction silentlycontinue
 if(!$resourcegroup)
 {
-	Write-Host "Creating ResourceGroup: '$resourceGroupName'"
-	New-AzureRmResourceGroup -Name $resourceGroupName -Location $location 
+    Write-Host "Creating ResourceGroup: '$resourceGroupName'"
+    New-AzureRmResourceGroup -Name $resourceGroupName -Location $location 
 }
 else
 {
-	Write-Host "Resourcegroup: '$resourceGroupName' already exists"
+    Write-Host "Resourcegroup: '$resourceGroupName' already exists"
 }
-DeploySingleVM
 
 # Deploying VM and checking whether it is succeeded or not
-Function DeploySingleVM{
-$name="MyUbuntuVM"
-Write-Host "Creating and Deploying the VM"
-$RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $TemplateFile
-if ($RGdeployment.ProvisioningState -eq "Succeeded")
+Function DeploySingleVM
 {
-    $MaxTimeOut=300
-    $i=0
-    while($MaxTimeOut -gt $i)
+    $name="MyUbuntuVM"
+    Write-Host "Creating and Deploying the VM"
+    $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $TemplateFile
+    if ($RGdeployment.ProvisioningState -eq "Succeeded")
     {
-        $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
-        if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
+        $MaxTimeOut=300
+        $i=0
+        while($MaxTimeOut -gt $i)
         {
-			$RGdeployment			#Displaying the ssh details of the VM
-            Write-Host "Deployment completed succesfully"
-            break
+            $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $name  -Status
+            if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
+            {
+                $RGdeployment			#Displaying the ssh details of the VM
+                Write-Host "Deployment completed succesfully"
+                break
+            }
+            else
+            {
+                Write-Host -NoNewline "." 	#print a . without newline
+            }
+            $i=$i+1
         }
-        else
+        if ($MaxTimeOut -eq $i)
         {
-            Write-Host -NoNewline "." 	#print a . without newline
-        }
-        $i=$i+1
+            Write-Host "Deployment failed"
+        }       
     }
-    if ($MaxTimeOut -eq $i)
-    {
-        Write-Host "Deployment failed"
-    } 
-    }
-    GetIPAddress
+    GetIPAddress    
 }
-
 
 #To get the PublicIp Address of the VM that created
 Function GetIPAddress
 {
-Write-Host "getting the adminUsername and IPAddress"
-$var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
-$adminUsername = $var.parameters.adminUsername.value
-Write-Host "Username of vm is:"$adminUsername
+    Write-Host "getting the adminUsername and IPAddress"
+    $var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
+    $adminUsername = $var.parameters.adminUsername.value
+    Write-Host "Username of vm is:"$adminUsername
 
-$adminPassword = $var.Parameters.adminPassword.value
-Write-Host "Password of vm is:"$adminPassword
+    $adminPassword = $var.Parameters.adminPassword.value
+    Write-Host "Password of vm is:"$adminPassword
 
-$IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
+    $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
     Write-Host "IPAddress is" $IPAddress.IpAddress 
     $sshdetails= 'ssh ' + $adminUsername + '@' + $IPAddress.IpAddress 
     $sshdetails
 }
-    
-    
+DeploySingleVM
