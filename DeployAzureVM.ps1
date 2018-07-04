@@ -11,34 +11,34 @@ param (
 
 . .\libs\sshUtils.ps1
 # Sigining in to the portal
-Write-Host "Logging in..."
+LogMsg 0 "Info : Logging in..."
 Login-AzureRmAccount
 
 # Getting the subsciptions from the portal
 Get-AzureRmSubscription -SubscriptionId $subscriptionId
 
 #select subscription
-Write-Host "Select the subscriptions from"
+LogMsg 0 "Info : Select the subscriptions from"
 Set-AzureRmContext -Subscription $subscriptionId
 
 # Create or using existing resourceGroup 
-Write-Host "Verifying ResourceGroupName exit or not: '$resourceGroupName'"
+LogMsg 0 "Info : Verifying ResourceGroupName exit or not: '$resourceGroupName'"
 $resourcegroup = Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location -erroraction silentlycontinue
 if(!$resourcegroup)
 {
-    Write-Host "Creating ResourceGroup: '$resourceGroupName'"
+    LogMsg 0 "Info : Creating ResourceGroup: '$resourceGroupName'"
     New-AzureRmResourceGroup -Name $resourceGroupName -Location $location 
 }
 else
 {
-    Write-Host "Resourcegroup: '$resourceGroupName' already exists"
+    LogMsg 0 "Info : Resourcegroup: '$resourceGroupName' already exists"
 }
 
 # Deploying VM and checking whether it is succeeded or not
 Function DeploySingleVM
 {
     $name="MyUbuntuVM"
-    Write-Host "Creating and Deploying the VM"
+    LogMsg 0 "Info : Creating and Deploying the VM"
     $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $TemplateFile
     if ($RGdeployment.ProvisioningState -eq "Succeeded")
     {
@@ -50,36 +50,36 @@ Function DeploySingleVM
             if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
             {
                 $RGdeployment			#Displaying the ssh details of the VM
-                Write-Host "Deployment completed succesfully"
+                LogMsg 0 "Info : Deployment completed succesfully"
                 break
             }
             else
             {
-                Write-Host -NoNewline "." 	#print a . without newline
+                LogMsg 0 "Info : -NoNewline "."  "	#print a . without newline
             }
             $i=$i+1
         }
         if ($MaxTimeOut -eq $i)
         {
-            Write-Host "Deployment failed"
+            LogMsg 0 "Info : Deployment failed"
         }       
     }
     GetIPAddress    
 }
 
+
 #To get the PublicIp Address of the VM that created
 Function GetIPAddress
 {
-    Write-Host "getting the adminUsername and IPAddress"
+    LogMsg 0 "Info : getting the adminUsername and IPAddress"
     $var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
     $adminUsername = $var.parameters.adminUsername.value
-    Write-Host "Username of vm is:"$adminUsername
-
+    LogMsg 0 "Info : Username of vm is:$adminUsername"
     $adminPassword = $var.Parameters.adminPassword.value
-    Write-Host "Password of vm is:"$adminPassword
+    LogMsg 0 "Info : Password of vm is:$adminPassword"
 
     $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress 
-    Write-Host "IPAddress is" $IPAddress.IpAddress 
+    LogMsg 0 "Info : IPAddress is $IPAddress.IpAddress"
     $sshdetails= 'ssh ' + $adminUsername + '@' + $IPAddress.IpAddress 
     $sshdetails
 }
