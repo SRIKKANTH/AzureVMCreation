@@ -1,11 +1,11 @@
-
 # Declaring the parameter that to give at run time 
-param (
+param 
+(
 	[string] $subscriptionId = "Your subscription",
 	[string] $resourceGroupName = "MyRG",
 	[string] $location = "eastus",
-    [string] $TemplateFile = "Templates\azuredeploy.json",
-    [string] $TemplateParameterFile = "Templates\azuredeploy.parameters.json",
+	[string] $TemplateFile = "Templates\azuredeploy.json",
+	[string] $ParameterFile = "Templates\azuredeploy.parameters.json",
 	[switch] $Debug = $false
 )
 
@@ -25,7 +25,7 @@ Set-AzureRmContext -Subscription $subscriptionId
 Function DeploySingleLinuxVM()
 {
 	$name="MyUbuntuVM"
-	$VMdeploy = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $TemplateFile  -TemplateParameterFile $TemplateParameterFile
+	$VMdeploy = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $TemplateFile  -TemplateParameterFile $ParameterFile
 	if ($VMdeploy.ProvisioningState -eq "Succeeded")
 	{
 		$MaxTimeOut=300
@@ -50,7 +50,7 @@ Function DeploySingleLinuxVM()
 		} 
     
 	}
-	#calling the function to get the sshdetails
+	#calling the function to get the sshdetails(username, Password and IPAddress)
 	Getsshdetails
 }
 
@@ -62,10 +62,8 @@ Function Getsshdetails()
     {
         $var=Get-Content $TemplateParameterFile | ConvertFrom-Json 
         $Username=$var.parameters.adminUsername.value
-        Write-Host " UserName of the VM is : "$Username
 
         $Password=$var.parameters.adminPassword.value 
-        Write-Host " Password is : " $Password
 
         $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Name MyPublicIp | Select-Object  IpAddress
         Write-Host  " IPAddress of VM is :" $IPAddress.IpAddress
@@ -89,15 +87,10 @@ if(!$resourcegroup)
 }
 else
 {
-	Write-Host  -ForegroundColor Yellow "ResourceGroupName is alresy exisited"
+	Write-Host  -ForegroundColor Yellow "ResourceGroupName is already exisited"
 }
 
 Write-Host -ForegroundColor Yellow "Creating and Deploying the VM"
 
 #Calling the function to create and deploy the VM
-DeploySingleLinuxVM
-
-
-
-
- 
+DeploySingleLinuxVM 
