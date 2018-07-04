@@ -10,33 +10,33 @@ param (
 )
 . .\libs\sshUtils.ps1
 # Sigining in to the portal
-Write-Host "Logging in..."
+Write-Host -ForegroundColor Green "Logging in..."
 Login-AzureRmAccount
 
 # Getting the subsciptions from the portal
 Get-AzureRmSubscription -SubscriptionId $subscriptionId
 
 #select subscription
-Write-Host "Select the subscriptions from"
+Write-Host -ForegroundColor Green "Select the subscriptions from"
 Set-AzureRmContext -Subscription $subscriptionId
 
 # Create or using existing resourceGroup 
-Write-Host "Verifying ResourceGroupName exit or not: '$resourceGroupName'"
+Write-Host -ForegroundColor Green "Verifying ResourceGroupName exit or not: '$resourceGroupName'"
 $resourcegroup = Get-AzureRmResourceGroup -Name $resourceGroupName -Location $location -erroraction silentlycontinue
 if(!$resourcegroup)
 {
-	Write-Host "Creating ResourceGroup: '$resourceGroupName'"
+	Write-Host -ForegroundColor Green "Creating ResourceGroup: '$resourceGroupName'"
 	New-AzureRmResourceGroup -Name $resourceGroupName -Location $location 
 }
 else
 {
-	Write-Host "Resourcegroup: '$resourceGroupName' already exists"
+	Write-Host -ForegroundColor Green "Resourcegroup: '$resourceGroupName' already exists"
 }
 
 # Deploying VM and checking whether it is succeeded or not
 Function DeploySingleVM{
 $name="MyUbuntuVM"
-Write-Host "Creating and Deploying the VM"
+Write-Host -ForegroundColor Green "Creating and Deploying the VM"
 $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $ParameterFile
 if ($RGdeployment.ProvisioningState -eq "Succeeded")
 {
@@ -48,7 +48,7 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
         if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
         {
 			$RGdeployment			#Displaying the ssh details of the VM
-            Write-Host "Deployment completed succesfully"
+            Write-Host -ForegroundColor Green "Deployment completed succesfully"
             break
         }
         else
@@ -69,7 +69,7 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
 #To get the PublicIp Address of the VM that created
 Function GetIPAddress
 {
-Write-Host "getting the adminUsername and IPAddress"
+Write-Host -ForegroundColor Green "getting the adminUsername and IPAddress"
 $var = Get-Content $ParameterFile | ConvertFrom-Json
 $adminUsername = $var.parameters.adminUsername.value
 Write-Host "Username of vm is:"$adminUsername
@@ -86,11 +86,11 @@ $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Na
 
 if($vmDetail.Statuses[0].DisplayStatus -eq "Provisioning succeeded")
 {
-    Write-Host "vm deploy is True"
+    Write-Host -ForegroundColor Green "vm deploy is True"
 }
  else
 { 
-    Write-Host "vm deploy is False"
+    Write-Host -ForegroundColor Green "vm deploy is False"
 }
     
     
