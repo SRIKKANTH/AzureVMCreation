@@ -1,14 +1,13 @@
 
 # Declaring the parameter that to give at run time 
 param (
-	[string] $subscriptionId = "YourSubscription",
-	[string] $resourceGroupName = "MyRG",
+    [string] $subscriptionId = "YourSubscription",
+	[string] $resourceGroupName = "bhavaniRG",
 	[string] $location = "eastus",
     [string] $Template = "Templates\azuredeploy.json",
     [string] $ParameterFile = "Templates\azuredeploy.parameters.json",
 	[switch] $Debug = $false
 )
-
 . .\libs\sshUtils.ps1
 # Sigining in to the portal
 Write-Host "Logging in..."
@@ -66,6 +65,7 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
     GetIPAddress
 }
 
+
 #To get the PublicIp Address of the VM that created
 Function GetIPAddress
 {
@@ -84,13 +84,13 @@ $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Na
 } 
     DeploySingleVM
 
-if($vmDetail.Statuses[0].DisplayStatus -eq "Provisioning succeeded")
-{
+ if($vmDetail.Statuses[0].DisplayStatus -eq "Provisioning succeeded")
+ {
     Write-Host "vm deploy is True"
-}
+ }
  else
-{ 
+ { 
     Write-Host "vm deploy is False"
-}
+ }
     
     
