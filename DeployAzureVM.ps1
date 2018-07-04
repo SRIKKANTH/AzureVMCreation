@@ -5,7 +5,7 @@ param (
 	[string] $resourceGroupName = "MyRG",
 	[string] $location = "eastus",
     [string] $Template = "Templates\azuredeploy.json",
-    [string] $TemplateFile = "Templates\azuredeploy.parameters.json",
+    [string] $ParameterFile = "Templates\azuredeploy.parameters.json",
 	[switch] $Debug = $false
 )
 . .\libs\sshUtils.ps1
@@ -32,13 +32,12 @@ else
 {
 	Write-Host "Resourcegroup: '$resourceGroupName' already exists"
 }
-DeploySingleVM
 
 # Deploying VM and checking whether it is succeeded or not
 Function DeploySingleVM{
 $name="MyUbuntuVM"
 Write-Host "Creating and Deploying the VM"
-$RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $TemplateFile
+$RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template  -TemplateParameterFile $ParameterFile
 if ($RGdeployment.ProvisioningState -eq "Succeeded")
 {
     $MaxTimeOut=300
@@ -66,12 +65,11 @@ if ($RGdeployment.ProvisioningState -eq "Succeeded")
     GetIPAddress
 }
 
-
 #To get the PublicIp Address of the VM that created
 Function GetIPAddress
 {
 Write-Host "getting the adminUsername and IPAddress"
-$var = Get-Content "Templates\azuredeploy.parameters.json" | ConvertFrom-Json
+$var = Get-Content $ParameterFile | ConvertFrom-Json
 $adminUsername = $var.parameters.adminUsername.value
 Write-Host "Username of vm is:"$adminUsername
 
@@ -82,6 +80,16 @@ $IPAddress=Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName  -Na
     Write-Host "IPAddress is" $IPAddress.IpAddress 
     $sshdetails= 'ssh ' + $adminUsername + '@' + $IPAddress.IpAddress 
     $sshdetails
+} 
+    DeploySingleVM
+
+if($vmDetail.Statuses[0].DisplayStatus -eq "Provisioning succeeded")
+{
+    Write-Host "vm deploy is True"
+}
+ else
+{ 
+    Write-Host "vm deploy is False"
 }
     
     
