@@ -31,3 +31,5 @@ LogMsg 0 "Info : ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDeta
 
 $TimeElapsed.Stop()
 LogMsg 0 "Info: Total execution time: $($TimeElapsed.Elapsed.TotalSeconds) Seconds"
+
+
