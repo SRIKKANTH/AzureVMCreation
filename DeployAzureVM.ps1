@@ -25,11 +25,7 @@ DeploySingleVM  $RGDetails
 
 $VMDetails = GetVMDetails $RGDetails
 ""
-<<<<<<< HEAD
-LogMsg 0 "Logs are located at '$LogFolder'" "White" "Blue"
-=======
-LogMsg 0 "Info : Logs are located at '$LogFolder'" "White" "Black"
->>>>>>> master
+LogMsg 0 "Info : Logs are located at '$LogFolder'" "White" "Blue"
 ""
 LogMsg 0 "Info : ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
 
