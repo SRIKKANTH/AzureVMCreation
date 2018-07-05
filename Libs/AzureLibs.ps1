@@ -335,14 +335,13 @@ function VerifyAndCleanUpResourceGroup
     # Create or using existing resourceGroup 
     LogMsg 0 "Info : Verifying if ResourceGroupName $($RGDetails.resourceGroupName) exists or not.."
     try {
-        $resourcegroup = Get-AzureRmResourceGroup -Name $resourceGroupName -erroraction silentlycontinue
+        $resourcegroup = Get-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -erroraction silentlycontinue
         if($resourcegroup)
         {
             LogMsg 0 "Warn : Resourcegroup: $($RGDetails.resourceGroupName) already exists"
             if ($DeleteIfExists)
             {
-                LogMsg 0 "Warn : Deleting Resourcegroup: $($RGDetails.resourceGroupName) as '-DeleteIfExists' option passed"
-                #Get-AzureRmResourceGroup -Name $RGDetails.resourceGroupName | Remove-AzureRmResourceGroup -Verbose -Force
+                LogMsg 0 "Warn : Deleting Resourcegroup: $($RGDetails.resourceGroupName) as '-DeleteIfExists' option is passed"
                 Remove-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Verbose -Force
                 LogMsg 0 "Info : Deleting Resourcegroup: $($RGDetails.resourceGroupName) completed."
                 
@@ -404,14 +403,9 @@ Function DeploySingleVM
     Param (
         [Object[]] $RGDetails
     ) 
-    $resourceGroupName = $RGDetails.ResourceGroupName
-    $Template = $RGDetails.TemplateFile
-    $ParametersFile = $RGDetails.ParametersFile
     
     LogMsg 0 "Info : Deploying the VM..."
-    $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $Template -TemplateParameterFile $ParametersFile
-    
-    #$VMDetails = New-Object -TypeName PSObject -Property $VMproperties
+    $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $RGDetails.ResourceGroupName -TemplateFile $RGDetails.TemplateFile -TemplateParameterFile $RGDetails.ParametersFile
     
     if ($RGdeployment.ProvisioningState -eq "Succeeded")
     {
@@ -419,8 +413,8 @@ Function DeploySingleVM
         $i=0
         while($MaxTimeOut -gt $i)
         {
-            $vmDetail=Get-AzureRmVM -ResourceGroupName $resourceGroupName -Name $RGDetails.vmName  -Status
-            if($vmDetail.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
+            $vmStatus=Get-AzureRmVM -ResourceGroupName $RGDetails.ResourceGroupName -Name $RGDetails.vmName  -Status
+            if($vmStatus.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
             {
                 LogMsg 0 "Info : Deployment completed succesfully"
                 break
