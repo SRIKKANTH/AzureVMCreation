@@ -1,3 +1,7 @@
+<#
+    Usage:
+    .\DeployAzureVM.ps1 -subscriptionId "Your subscriptionId" -resourceGroupName "Resource Group Name" -vmSize "VM size to be deployed"
+#>
 
 # Declaring the parameter that to give at run time 
 param (
@@ -25,9 +29,12 @@ DeploySingleVM  $RGDetails
 
 $VMDetails = GetVMDetails $RGDetails
 ""
-LogMsg 0 "Info : Logs are located at '$LogFolder'" "White" "Blue"
+LogMsg 0 "Info: Logs are located at '$LogFolder'" "White" "Blue"
 ""
-LogMsg 0 "Info : ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
+LogMsg 0 "Info: ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
+
+WaitTillMachineBoots $VMDetails
+
 
 $TimeElapsed.Stop()
 LogMsg 0 "Info: Total execution time: $($TimeElapsed.Elapsed.TotalSeconds) Seconds"

@@ -432,6 +432,42 @@ Function DeploySingleVM
         }       
     }    
 }
+
+function WaitTillMachineBoots 
+{
+    [cmdletbinding()]
+    Param (
+        [Object[]] $VMDetails
+    ) 
+    LogMsg 0 "Info: Checking if VM is up:"
+    for($count = 0; $count -le 30; $count++ )
+    {
+        #$output =  .\bin\plink.exe -C -pw $($VMDetails.PassWord) -P $($VMDetails.Port) $($VMDetails.UserName)@$($VMDetails.IP) "uptime" 2>&1
+        $output = .\bin\plink.exe  -pw $VMDetails.PassWord -P 22 -l $VMDetails.UserName $VMDetails.IP "uptime" 2>&1
+        $output = $output | Select-String -Pattern 'load average'
+
+        if ( $output )
+        {
+            break
+        }
+        else
+        {
+            Write-Host "." -NoNewline  #Warning: Don't use LogMsg here!!
+        }
+    }
+
+    ""
+    if ( $output )
+    {
+        LogMsg 0 "Info: VM is up"
+    }
+    else {
+        LogMsg 0 "Info: VM isn't up"
+        return $false
+    }
+    return $true
+}
+
 <#
 #   Script execution starts from here..
 #>
@@ -463,6 +499,7 @@ $RGproperties = @{  'subscriptionId' = "UnDeclared";
 'ParametersFile' = "UnDeclared"}
 
 $VMproperties = @{  'IP'="UnDeclared";
+                    'Port'=22;
                     'VMName'="UnDeclared";
                     'UserName'="UnDeclared";
                     'PassWord'="UnDeclared"}
