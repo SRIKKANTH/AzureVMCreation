@@ -29,12 +29,11 @@ DeploySingleVM  $RGDetails
 
 $VMDetails = GetVMDetails $RGDetails
 ""
+LogMsg 0 "Info: ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
+""
+WaitTillMachineBoots $VMDetails
+""
 LogMsg 0 "Info: Logs are located at '$LogFolder'" "White" "Blue"
 ""
-LogMsg 0 "Info: ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
-
-WaitTillMachineBoots $VMDetails
-
-
 $TimeElapsed.Stop()
 LogMsg 0 "Info: Total execution time: $($TimeElapsed.Elapsed.TotalSeconds) Seconds"

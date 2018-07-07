@@ -443,7 +443,7 @@ function WaitTillMachineBoots
     for($count = 0; $count -le 30; $count++ )
     {
         #$output =  .\bin\plink.exe -C -pw $($VMDetails.PassWord) -P $($VMDetails.Port) $($VMDetails.UserName)@$($VMDetails.IP) "uptime" 2>&1
-        $output = .\bin\plink.exe  -pw $VMDetails.PassWord -P 22 -l $VMDetails.UserName $VMDetails.IP "uptime" 2>&1
+        $output = echo y | .\bin\plink.exe  -pw $VMDetails.PassWord -P 22 -l $VMDetails.UserName $VMDetails.IP "uptime" 2>&1
         $output = $output | Select-String -Pattern 'load average'
 
         if ( $output )
