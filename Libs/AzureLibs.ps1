@@ -356,9 +356,9 @@ function RunTestScript
     ) 
     RunLinuxCmd -username $VMDetails.UserName -password $VMDetails.PassWord -ip $VMDetails.IP -port $VMDetails.Port -command "bash $($RGDetails.TestDetails.TestScript) > ConsoleLogFile.log" -runAsSudo -runMaxAllowedTime $runMaxAllowedTime
 }
-<#
+<#####################################################################################################
 #   Script execution starts from here..
-#>
+#####################################################################################################>
 
 $dbgLevel_Debug=10
 $dbgLevel_Release=1
@@ -396,7 +396,6 @@ New-Item -ItemType Directory -Force -Path $LogFolder | out-null
 
 ValidateInputs
 
-#
 $RGproperties = @{  'subscriptionId' = "UnDeclared";
                     'resourceGroupName' = "UnDeclared";
                     'Location' = "UnDeclared";
