@@ -383,20 +383,43 @@ function GetRGDetails
 {
     [cmdletbinding()]
     Param (
-        [string] $TestName = "DeploySingleVM"
-    ) 
+        [string] $TestName = "UnDeclared"
+    )
 
     $RGDetails = New-Object -TypeName PSObject -Property $RGproperties
     
     $RGDetails.resourceGroupName = $resourceGroupName
     $RGDetails.subscriptionId = $subscriptionId
 
-    if ( $TestName -eq "DeploySingleVM" )
+    $TestDefinitions = Get-Content "Templates\TestDefinitions.json" | ConvertFrom-Json
+    LogMsg 5 "Info: TestDefinitions : `n $($TestDefinitions | ConvertTo-Json)"
+
+    $TestDetails = $TestDefinitions.TestDefinitions.$TestName
+    LogMsg 5 "Info: TestDetails : `n $($TestDetails | ConvertTo-Json)"
+
+    if ($TestDetails)
     {
-        $RGDetails.TemplateFile = "Templates\azuredeploy.json"
-        $RGDetails.ParametersFile = "Templates\azuredeploy.parameters.json"
+        $TestDetails.Template = $TestDefinitions.Templates.$TemplateType
+        LogMsg 5 "Info: TestDetails.Templates : `n $($TestDetails.Template | ConvertTo-Json)"
+
+        if (-not $TestDetails.Template)
+        {
+            LogMsg 0 "Error: Unknown Test TemplateType: '$TemplateType'"
+            exit
+        }    
     }
-    
+    else 
+    {
+        LogMsg 0 "Error: Unknown Test: '$TestName'"
+        exit
+    }
+
+    $RGDetails.TemplateFile = $TestDetails.Template.TemplateFile
+    $RGDetails.ParametersFile = $TestDetails.Template.ParametersFile
+
+    LogMsg 5 "Info: TemplateFile : $($RGDetails.TemplateFile)"
+    LogMsg 5 "Info: ParametersFile : $($RGDetails.ParametersFile)"
+
     if ( $RGDetails.ParametersFile -ne "UnDeclared" )
     {
         $VMParams = Get-Content $RGDetails.ParametersFile | ConvertFrom-Json
@@ -527,18 +550,31 @@ $LogFolder="$($WorkingDir)\$($LogDir)"
 $logfile="$($LogFolder)\LocalLogFile.log"
 
 New-Item -ItemType Directory -Force -Path $LogFolder | out-null
+
+if ( $subscriptionId -eq "UnDeclared")
+{
+    LogMsg 0 "Error: Please provide valid subscriptionId"
+    Exit
+}
+
+if ( $TestName -eq "UnDeclared")
+{
+    LogMsg 0 "Error: Please provide valid TestName"
+    Exit
+}
+
 #
 $RGproperties = @{  'subscriptionId' = "UnDeclared";
-'resourceGroupName' = "UnDeclared";
-'Location' = "UnDeclared";
-'VMName' = "UnDeclared";
-'TemplateFile' = "UnDeclared";
-'ParametersFile' = "UnDeclared"}
+                    'resourceGroupName' = "UnDeclared";
+                    'Location' = "UnDeclared";
+                    'VMName' = "UnDeclared";
+                    'TemplateFile' = "UnDeclared";
+                    'ParametersFile' = "UnDeclared"
+                }
 
 $VMproperties = @{  'IP'="UnDeclared";
                     'Port'=22;
                     'VMName'="UnDeclared";
                     'UserName'="UnDeclared";
-                    'PassWord'="UnDeclared"}
-
-                    
+                    'PassWord'="UnDeclared"
+                }

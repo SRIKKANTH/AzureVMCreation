@@ -1,0 +1,19 @@
+{
+    "subscriptionId" : "YourSubscription",
+    "TestDefinitions" : {
+        "DeploySingleVM" : {
+            "Template" : {},
+            "vmSize": "Standard_A1"
+        }
+    },
+    "Templates" : {
+        "1VM_1ManagedDisk" : {
+            "TemplateFile" : "Templates\\azuredeploy.json",
+            "ParametersFile" : "Templates\\azuredeploy.parameters.json"
+        },
+        "1VM_1StorageAcDisk" : {
+            "TemplateFile" : "Templates\\azuredeploy.json",
+            "ParametersFile" : "Templates\\azuredeploy.parameters.json"
+        }
+    }
+}
