@@ -102,7 +102,10 @@ Function RemoteCopy($uploadTo, $downloadFrom, $downloadTo, $port=22, $files, $us
 						}
 						elseif($returnCode -eq 0)
 						{
-							LogMsg 0 "Info: Upload Success after $retry Attempt"
+							if ($retry -ge 2)
+							{
+								LogMsg 0 "Info: Upload Success after $retry Attempt"
+							}
 							$retry=$maxRetry+1
 						}
 					}
@@ -187,7 +190,10 @@ Function RemoteCopy($uploadTo, $downloadFrom, $downloadTo, $port=22, $files, $us
 						}
 						elseif($returnCode -eq 0)
 						{
-							LogMsg 0 "Info: Upload Success after $retry Attempt"
+							if ($retry -ge 2)
+							{
+								LogMsg 0 "Info: Upload Success after $retry Attempt"
+							}
 							$retry=$maxRetry+1
 						}
 					}

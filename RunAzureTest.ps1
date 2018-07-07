@@ -10,7 +10,7 @@ param (
     [string] $TestName = "UnDeclared",
     [string] $location = "eastus",
     [string] $vmSize = "UnDeclared",
-    [switch] $Debug = $true
+    [switch] $Debug = $false
 )
 
 . .\libs\AzureLibs.ps1
@@ -44,6 +44,8 @@ else
     CleanUpResourceGroup $RGDetails 
 }
 
+UploadFiles -VMDetails $VMDetails -RGDetails  $RGDetails 
+RunTestScript -VMDetails $VMDetails -RGDetails  $RGDetails 
 DownloadFilesAndLogs $VMDetails
 
 ""

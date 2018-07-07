@@ -338,15 +338,16 @@ function VerifyAndCleanUpResourceGroup
         $resourcegroup = Get-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -erroraction silentlycontinue
         if($resourcegroup)
         {
-            LogMsg 5 "Warn: Resourcegroup: $($RGDetails.resourceGroupName) already exists"
+            LogMsg 5 "Debug: Resourcegroup: $($RGDetails.resourceGroupName) already exists"
             if ($DeleteIfExists)
             {
                 LogMsg 0 "Warn: Deleting Resourcegroup: $($RGDetails.resourceGroupName) as '-DeleteIfExists' option is passed"
                 Remove-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Force
                 LogMsg 0 "Info: Deleting Resourcegroup: $($RGDetails.resourceGroupName) completed."
                 
-                LogMsg 0 "Info: Re-creating ResourceGroup: $($RGDetails.resourceGroupName)"
+                LogMsg 0 "Info: Re-creating ResourceGroup: $($RGDetails.resourceGroupName) ..."
                 New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location >$null 2>&1
+                LogMsg 0 "Info: Re-creating ResourceGroup: $($RGDetails.resourceGroupName) done!"
             }
         }
         else {
@@ -378,7 +379,11 @@ function CleanUpResourceGroup
     }
 }
 
-#Usage GetRGDetails <TestName>
+<#
+#   Deploying VM and checking whether it is succeeded or not
+#   Syntax GetRGDetails <TestName>
+#>
+
 function GetRGDetails 
 {
     [cmdletbinding()]
@@ -392,20 +397,24 @@ function GetRGDetails
     $RGDetails.subscriptionId = $subscriptionId
 
     $TestDefinitions = Get-Content "Templates\TestDefinitions.json" | ConvertFrom-Json
-    LogMsg 5 "Info: TestDefinitions : `n $($TestDefinitions | ConvertTo-Json)"
+    LogMsg 5 "Debug: TestDefinitions : `n $($TestDefinitions | ConvertTo-Json)"
 
-    $TestDetails = $TestDefinitions.TestDefinitions.$TestName
-    LogMsg 5 "Info: TestDetails : `n $($TestDetails | ConvertTo-Json)"
+    $RGDetails.TestDetails = $TestDefinitions.TestDefinitions.$TestName
+    LogMsg 5 "Debug: TestDetails : `n $($RGDetails.TestDetails | ConvertTo-Json)"
 
-    if ($TestDetails)
+    if ($RGDetails.TestDetails)
     {
-        $TestDetails.Template = $TestDefinitions.Templates.$TemplateType
-        LogMsg 5 "Info: TestDetails.Templates : `n $($TestDetails.Template | ConvertTo-Json)"
-
-        if (-not $TestDetails.Template)
+        $RGDetails.TemplateFile = $TestDefinitions.Templates.$TemplateType.TemplateFile
+        $RGDetails.ParametersFile = $TestDefinitions.Templates.$TemplateType.ParametersFile
+        LogMsg 5 "Debug: TemplateFile : $($RGDetails.TemplateFile)"
+        LogMsg 5 "Debug: ParametersFile : $($RGDetails.ParametersFile)"
+        if (-not $RGDetails.TemplateFile)
         {
             LogMsg 0 "Error: Unknown Test TemplateType: '$TemplateType'"
             exit
+        }
+        else {
+            LogMsg 5 "Debug: Contents of ParametersFile : `n $(Get-Content $RGDetails.ParametersFile )"
         }    
     }
     else 
@@ -414,12 +423,7 @@ function GetRGDetails
         exit
     }
 
-    $RGDetails.TemplateFile = $TestDetails.Template.TemplateFile
-    $RGDetails.ParametersFile = $TestDetails.Template.ParametersFile
-
-    LogMsg 5 "Info: TemplateFile : $($RGDetails.TemplateFile)"
-    LogMsg 5 "Info: ParametersFile : $($RGDetails.ParametersFile)"
-
+    # Creating temp Parameters file with given VM size
     if ( $RGDetails.ParametersFile -ne "UnDeclared" )
     {
         $VMParams = Get-Content $RGDetails.ParametersFile | ConvertFrom-Json
@@ -433,19 +437,22 @@ function GetRGDetails
             $RGDetails.ParametersFile = "$($LogFolder)\azuredeploy.parameters_temp.json"
         }
     }
+
     return $RGDetails
 }
 
-# Deploying VM and checking whether it is succeeded or not
-# Syntax DeploySingleVM( ResourceGroupName, TemplateFilePath, ParamtersFilePath)
-Function DeploySingleVM 
+<#
+#   Deploying VM and checking whether it is succeeded or not
+#   Syntax DeploySingleVM $RGDetails
+#>
+Function DeploySingleVM
 {
     [cmdletbinding()]
     Param (
         [Object[]] $RGDetails
-    ) 
-    
-    LogMsg 0 "Info : Deploying the ResourceGroup '$($RGDetails.ResourceGroupName)'..."
+    )
+
+    LogMsg 0 "Info: Deploying the ResourceGroup '$($RGDetails.ResourceGroupName)'..."
     $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $RGDetails.ResourceGroupName -TemplateFile $RGDetails.TemplateFile -TemplateParameterFile $RGDetails.ParametersFile
     
     if ($RGdeployment.ProvisioningState -eq "Succeeded")
@@ -457,19 +464,22 @@ Function DeploySingleVM
             $vmStatus=Get-AzureRmVM -ResourceGroupName $RGDetails.ResourceGroupName -Name $RGDetails.vmName  -Status
             if($vmStatus.Statuses[0].DisplayStatus -eq  "Provisioning succeeded")
             {
-                LogMsg 0 "Info : Deployment completed succesfully"
+                LogMsg 0 "Info: Deployment completed succesfully"
                 break
             }
             else
             {
-                Write-Host "." -NoNewline   #Don't use LogMsg here.
+                <#
+                    Warning: Don't use LogMsg here.
+                #>
+                Write-Host "." -NoNewline
             }
             $i=$i+1
         }
 
         if ($MaxTimeOut -eq $i)
         {
-            LogMsg 0 "Error : Deployment failed"
+            LogMsg 0 "Error: Deployment failed"
         }       
     }    
 }
@@ -480,10 +490,9 @@ function WaitTillMachineBoots
     Param (
         [Object[]] $VMDetails
     ) 
-    LogMsg 5 "Info: Checking if VM is up:"
+    LogMsg 5 "Debug: Checking if VM is up:"
     for($count = 0; $count -le 30; $count++ )
     {
-        #$output =  .\bin\plink.exe -C -pw $($VMDetails.PassWord) -P $($VMDetails.Port) $($VMDetails.UserName)@$($VMDetails.IP) "uptime" 2>&1
         $output = echo y | .\bin\plink.exe  -pw $VMDetails.PassWord -P 22 -l $VMDetails.UserName $VMDetails.IP "uptime" 2>&1
         $output = $output | Select-String -Pattern 'load average'
 
@@ -493,18 +502,21 @@ function WaitTillMachineBoots
         }
         else
         {
-            Write-Host "." -NoNewline  #Warning: Don't use LogMsg here!!
+            <#
+                Warning: Don't use LogMsg here.
+            #>            
+            Write-Host "." -NoNewline  
         }
     }
 
     ""
     if ( $output )
     {
-        LogMsg 5 "Info: VM is up"
+        LogMsg 5 "Debug: VM is up"
         return $true
     }
     else {
-        LogMsg 5 "Info: VM isn't up"
+        LogMsg 5 "Debug: VM isn't up"
         return $false
     }    
 }
@@ -529,6 +541,50 @@ function DownloadFilesAndLogs
 }
 
 <#
+Upload files related to the test
+Syntax:
+    UploadFiles -VMDetails $VMDetails -RGDetails  $RGDetails 
+#>
+function UploadFiles
+{
+    [cmdletbinding()]
+    Param (
+        [Object[]] $VMDetails,
+        [Object[]] $RGDetails
+    ) 
+    .\bin\dos2unix.exe .\LinuxScripts\* 2>&1  >$null
+    $SupportFilesList = $RGDetails.TestDetails.SupportFiles -split ","
+    $SupportFilesList = $RGDetails.TestDetails.TestScript + $SupportFilesList
+    if ($SupportFilesList.count -ne 0 )
+    {
+        ForEach ( $File in $SupportFilesList )
+        {
+            LogMsg 5 "Debug: Uploading $File"
+            RemoteCopy -uploadTo $VMDetails.IP -port $VMDetails.Port -files ".\LinuxScripts\$File" -username $VMDetails.UserName -password $VMDetails.PassWord -upload
+        }
+    }
+    else 
+    {
+        LogMsg 5 "Debug: No file are uploaded as both 'SupportFiles' & 'TestScript' are empty"
+    }
+}
+
+<#
+Syntax:
+    RunTestScript -VMDetails $VMDetails -RGDetails  $RGDetails
+#>
+
+function RunTestScript
+{
+    [cmdletbinding()]
+    Param (
+        [Object[]] $VMDetails,
+        [Object[]] $RGDetails,
+        [int16] $runMaxAllowedTime=500
+    ) 
+    RunLinuxCmd -username $VMDetails.UserName -password $VMDetails.PassWord -ip $VMDetails.IP -port $VMDetails.Port -command "bash $($RGDetails.TestDetails.TestScript) > ConsoleLogFile.log" -runAsSudo -runMaxAllowedTime $runMaxAllowedTime
+}
+<#
 #   Script execution starts from here..
 #>
 
@@ -543,6 +599,21 @@ else
 	$dbgLevel=$dbgLevel_Release
 }
 
+function ValidateInputs 
+{
+    if ( $subscriptionId -eq "UnDeclared")
+    {
+        LogMsg 0 "Error: Please provide valid subscriptionId"
+        Exit
+    }
+    
+    if ( $TestName -eq "UnDeclared")
+    {
+        LogMsg 0 "Error: Please provide valid TestName"
+        Exit
+    }    
+}
+
 $WorkingDir=(Get-Item -Path ".\").FullName
 $DateString=$((Get-Date).ToString('yyyy_MM_dd_hh_mm_ss'))
 $LogDir="Logs\$DateString"
@@ -551,17 +622,7 @@ $logfile="$($LogFolder)\LocalLogFile.log"
 
 New-Item -ItemType Directory -Force -Path $LogFolder | out-null
 
-if ( $subscriptionId -eq "UnDeclared")
-{
-    LogMsg 0 "Error: Please provide valid subscriptionId"
-    Exit
-}
-
-if ( $TestName -eq "UnDeclared")
-{
-    LogMsg 0 "Error: Please provide valid TestName"
-    Exit
-}
+ValidateInputs
 
 #
 $RGproperties = @{  'subscriptionId' = "UnDeclared";
@@ -569,7 +630,8 @@ $RGproperties = @{  'subscriptionId' = "UnDeclared";
                     'Location' = "UnDeclared";
                     'VMName' = "UnDeclared";
                     'TemplateFile' = "UnDeclared";
-                    'ParametersFile' = "UnDeclared"
+                    'ParametersFile' = "UnDeclared";
+                    'TestDetails' = {}
                 }
 
 $VMproperties = @{  'IP'="UnDeclared";

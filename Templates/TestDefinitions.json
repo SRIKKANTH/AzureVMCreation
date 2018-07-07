@@ -2,8 +2,9 @@
     "subscriptionId" : "YourSubscription",
     "TestDefinitions" : {
         "DeploySingleVM" : {
-            "Template" : {},
-            "vmSize": "Standard_A1"
+            "vmSize": "Standard_A1",
+            "TestScript": "SampleScript.sh",
+            "SupportFiles": ""
         }
     },
     "Templates" : {
