@@ -333,30 +333,48 @@ function VerifyAndCleanUpResourceGroup
         [switch] $DeleteIfExists = $False
     ) 
     # Create or using existing resourceGroup 
-    LogMsg 0 "Info : Verifying if ResourceGroupName $($RGDetails.resourceGroupName) exists or not.."
+    LogMsg 0 "Info: Verifying if ResourceGroupName $($RGDetails.resourceGroupName) exists or not.."
     try {
         $resourcegroup = Get-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -erroraction silentlycontinue
         if($resourcegroup)
         {
-            LogMsg 0 "Warn : Resourcegroup: $($RGDetails.resourceGroupName) already exists"
+            LogMsg 5 "Warn: Resourcegroup: $($RGDetails.resourceGroupName) already exists"
             if ($DeleteIfExists)
             {
-                LogMsg 0 "Warn : Deleting Resourcegroup: $($RGDetails.resourceGroupName) as '-DeleteIfExists' option is passed"
-                Remove-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Verbose -Force
-                LogMsg 0 "Info : Deleting Resourcegroup: $($RGDetails.resourceGroupName) completed."
+                LogMsg 0 "Warn: Deleting Resourcegroup: $($RGDetails.resourceGroupName) as '-DeleteIfExists' option is passed"
+                Remove-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Force
+                LogMsg 0 "Info: Deleting Resourcegroup: $($RGDetails.resourceGroupName) completed."
                 
-                LogMsg 0 "Info : Re-creating ResourceGroup: $($RGDetails.resourceGroupName)"
-                New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location 
+                LogMsg 0 "Info: Re-creating ResourceGroup: $($RGDetails.resourceGroupName)"
+                New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location >$null 2>&1
             }
         }
         else {
-            LogMsg 0 "Info : Creating ResourceGroup: $($RGDetails.resourceGroupName)"
-            New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location                
+            LogMsg 0 "Info: Creating ResourceGroup: $($RGDetails.resourceGroupName)"
+            New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location >$null 2>&1               
         }
     }
     catch {
-        LogMsg 0 "Info : Creating ResourceGroup: $($RGDetails.resourceGroupName)"
-        New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location
+        LogMsg 0 "Info: Creating ResourceGroup: $($RGDetails.resourceGroupName)"
+        New-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Location $RGDetails.location >$null 2>&1
+    }
+}
+
+function CleanUpResourceGroup
+{
+    [cmdletbinding()]
+    Param (
+        [Object[]] $RGDetails
+    ) 
+    # Create or using existing resourceGroup 
+    LogMsg 0 "Info : Removing ResourceGroupName $($RGDetails.resourceGroupName) .."
+    try 
+    {
+        Remove-AzureRmResourceGroup -Name $RGDetails.resourceGroupName -Verbose -Force
+        LogMsg 0 "Info : Deleting Resourcegroup: $($RGDetails.resourceGroupName) completed."
+    }
+    catch {
+        LogMsg 0 "Info : Failed to delete ResourceGroup: $($RGDetails.resourceGroupName)"
     }
 }
 
@@ -404,7 +422,7 @@ Function DeploySingleVM
         [Object[]] $RGDetails
     ) 
     
-    LogMsg 0 "Info : Deploying the VM..."
+    LogMsg 0 "Info : Deploying the ResourceGroup '$($RGDetails.ResourceGroupName)'..."
     $RGdeployment = New-AzureRmResourceGroupDeployment -ResourceGroupName $RGDetails.ResourceGroupName -TemplateFile $RGDetails.TemplateFile -TemplateParameterFile $RGDetails.ParametersFile
     
     if ($RGdeployment.ProvisioningState -eq "Succeeded")
@@ -439,7 +457,7 @@ function WaitTillMachineBoots
     Param (
         [Object[]] $VMDetails
     ) 
-    LogMsg 0 "Info: Checking if VM is up:"
+    LogMsg 5 "Info: Checking if VM is up:"
     for($count = 0; $count -le 30; $count++ )
     {
         #$output =  .\bin\plink.exe -C -pw $($VMDetails.PassWord) -P $($VMDetails.Port) $($VMDetails.UserName)@$($VMDetails.IP) "uptime" 2>&1
@@ -459,13 +477,32 @@ function WaitTillMachineBoots
     ""
     if ( $output )
     {
-        LogMsg 0 "Info: VM is up"
+        LogMsg 5 "Info: VM is up"
+        return $true
     }
     else {
-        LogMsg 0 "Info: VM isn't up"
+        LogMsg 5 "Info: VM isn't up"
         return $false
-    }
-    return $true
+    }    
+}
+
+function DownloadFilesAndLogs 
+{
+    [cmdletbinding()]
+    Param (
+        [Object[]] $VMDetails
+    ) 
+	$VMLogDownloadFolder = $(Join-Path $LogFolder $vm.vmName)
+
+	If( -not (test-path $VMLogDownloadFolder))
+	{
+		New-Item -ItemType Directory -Force -Path $VMLogDownloadFolder | out-null
+	}
+    RunLinuxCmd -username $VMDetails.UserName -password $VMDetails.PassWord -ip $VMDetails.IP -port 22 -command "dmesg > dmesg.log"  -runAsSudo -ignoreLinuxExitCode
+    RunLinuxCmd -username $VMDetails.UserName -password $VMDetails.PassWord -ip $VMDetails.IP -port 22 -command "cat /var/log/messages >  messages.log"  -runAsSudo -ignoreLinuxExitCode
+    RunLinuxCmd -username $VMDetails.UserName -password $VMDetails.PassWord -ip $VMDetails.IP -port 22 -command "cat /var/log/syslog > syslog.log"  -runAsSudo -ignoreLinuxExitCode
+     
+	RemoteCopy -download -downloadFrom $VMDetails.IP -files "*" -downloadTo $VMLogDownloadFolder -port $VMDetails.Port -username $VMDetails.UserName -password $VMDetails.PassWord
 }
 
 <#
