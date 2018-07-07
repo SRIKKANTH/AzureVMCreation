@@ -29,9 +29,23 @@ DeploySingleVM  $RGDetails
 
 $VMDetails = GetVMDetails $RGDetails
 ""
-LogMsg 0 "Info: ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
+LogMsg 0 "Info: VM login detais: ssh $($VMDetails.UserName)@$($VMDetails.IP) Password: $($VMDetails.PassWord)" "White" "Black"
 ""
-WaitTillMachineBoots $VMDetails
+
+$VMbootStatus=WaitTillMachineBoots $VMDetails
+
+if ( $VMbootStatus -eq "True")
+{
+    LogMsg 0 "Info: Virtual Machine '$($VMDetails.VMName)' is up and ready for testing.."
+}
+else
+{
+    LogMsg 0 "Error: Failed to boot VM: '$($VMDetails.VMName)'"
+    CleanUpResourceGroup $RGDetails 
+}
+
+DownloadFilesAndLogs $VMDetails
+
 ""
 LogMsg 0 "Info: Logs are located at '$LogFolder'" "White" "Blue"
 ""
