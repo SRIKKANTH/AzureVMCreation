@@ -5,7 +5,7 @@
 
 # Declaring the parameter that to give at run time 
 param (
-    [string] $subscriptionId = "YourSubscription",
+    [string] $subscriptionId = "UnDeclared",
     [string] $resourceGroupName = "srmMyRG",
     [string] $TestName = "DeploySingleVM",
     [string] $location = "eastus",

@@ -356,20 +356,6 @@ function RunTestScript
     ) 
     RunLinuxCmd -username $VMDetails.UserName -password $VMDetails.PassWord -ip $VMDetails.IP -port $VMDetails.Port -command "bash $($RGDetails.TestDetails.TestScript) > ConsoleLogFile.log" -runAsSudo -runMaxAllowedTime $runMaxAllowedTime
 }
-<#####################################################################################################
-#   Script execution starts from here..
-#####################################################################################################>
-
-$dbgLevel_Debug=10
-$dbgLevel_Release=1
-if ($Debug)
-{
-	$dbgLevel=$dbgLevel_Debug
-}
-else
-{
-	$dbgLevel=$dbgLevel_Release
-}
 
 function ValidateInputs 
 {
@@ -384,6 +370,21 @@ function ValidateInputs
         LogMsg 0 "Error: Please provide valid TestName"
         Exit
     }    
+}
+
+<#####################################################################################################
+#   Script execution starts from here..
+#####################################################################################################>
+
+$dbgLevel_Debug=10
+$dbgLevel_Release=1
+if ($Debug)
+{
+	$dbgLevel=$dbgLevel_Debug
+}
+else
+{
+	$dbgLevel=$dbgLevel_Release
 }
 
 $WorkingDir=(Get-Item -Path ".\").FullName
