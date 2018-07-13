@@ -337,7 +337,7 @@ function UploadFiles
     }
     else 
     {
-        LogMsg 5 "Debug: No file are uploaded as both 'SupportFiles' & 'TestScript' are empty"
+        LogMsg 5 "Debug: No files are uploaded as both 'SupportFiles' & 'TestScript' are empty"
     }
 }
 

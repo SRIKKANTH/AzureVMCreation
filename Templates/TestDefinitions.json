@@ -5,7 +5,12 @@
             "vmSize": "Standard_A1",
             "TestScript": "SampleScript.sh",
             "SupportFiles": ""
-        }
+        },
+        "DeployInfluxDB" : {
+            "vmSize": "Standard_A1",
+            "TestScript": "InstallInfluxDB.sh",
+            "SupportFiles": ""
+        },
     },
     "Templates" : {
         "1VM_1ManagedDisk" : {
